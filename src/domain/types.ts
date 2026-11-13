@@ -1,15 +1,33 @@
-export const SESSION_TYPES = ['boulder', 'lead', 'toprope', 'hangboard', 'strength', 'cardio'] as const
-export type SessionType = typeof SESSION_TYPES[number]
+export const SESSION_TYPES = [
+  'boulder',
+  'lead',
+  'toprope',
+  'hangboard',
+  'strength',
+  'cardio',
+] as const
+export type SessionType = (typeof SESSION_TYPES)[number]
 export const TYPE_LABELS: Record<SessionType, string> = {
-  boulder: '抱石', lead: '先锋', toprope: '顶绳', hangboard: '指力板', strength: '力量', cardio: '有氧',
+  boulder: '抱石',
+  lead: '先锋',
+  toprope: '顶绳',
+  hangboard: '指力板',
+  strength: '力量',
+  cardio: '有氧',
 }
 export const RESULTS = ['flash', 'send', 'attempt', 'project'] as const
-export type ClimbResult = typeof RESULTS[number]
+export type ClimbResult = (typeof RESULTS)[number]
 export const RESULT_LABELS: Record<ClimbResult, string> = {
-  flash: 'Flash · 一次完攀', send: 'Send · 完攀', attempt: 'Attempt · 尝试', project: 'Project · 攻线',
+  flash: 'Flash · 一次完攀',
+  send: 'Send · 完攀',
+  attempt: 'Attempt · 尝试',
+  project: 'Project · 攻线',
 }
 export type GradeSystem = 'v' | 'yds' | 'french'
-export interface Grade { system: GradeSystem; value: string }
+export interface Grade {
+  system: GradeSystem
+  value: string
+}
 export interface Session {
   id: string
   date: string
@@ -45,8 +63,18 @@ export interface Database {
   climbs: Climb[]
   training: Training[]
 }
-export interface SessionDetail { session: Session; climbs: Climb[]; training: Training[] }
+export interface SessionDetail {
+  session: Session
+  climbs: Climb[]
+  training: Training[]
+}
 export type ImportMode = 'merge' | 'replace'
-export const emptyDatabase = (): Database => ({ schemaVersion: 1, sessions: [], climbs: [], training: [] })
-export const isClimbing = (type: SessionType): boolean => ['boulder', 'lead', 'toprope'].includes(type)
+export const emptyDatabase = (): Database => ({
+  schemaVersion: 1,
+  sessions: [],
+  climbs: [],
+  training: [],
+})
+export const isClimbing = (type: SessionType): boolean =>
+  ['boulder', 'lead', 'toprope'].includes(type)
 export const isCompleted = (result: ClimbResult): boolean => result === 'flash' || result === 'send'

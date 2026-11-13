@@ -1,7 +1,149 @@
 # 岩迹 · 攀岩训练记录
 
-Taro 4 + React + TypeScript，H5 优先。正在构建，功能进度与运行说明会在交付前更新。
+一个移动端优先的私人攀岩日志。记录训练、看见积累，数据保存在自己的浏览器中。
 
-设计依据见 `docs/design-notes.md`。数据按 sessions / climbs / training 三表组织，分为 domain、storage、repo、ui 四层。
+**当前实现：Vite 6 + React 18 + TypeScript，H5 MVP。** 三表模型与四层结构已保留，可迁移到 Taro 4 / 微信小程序。设计依据是 [design-notes.md](docs/design-notes.md)，没有复制调研项目的代码。
 
-当前环境禁止写入 `.git`，首次 `git init` 已失败；提交状态将在交付时说明。
+## 安装与运行
+
+已在 Node **22.11.0**、npm **10.9.0** 环境中验证。
+
+```bash
+cd ~/codex-work/climb-log
+npm ci
+npm run dev:h5
+```
+
+打开 **http://localhost:10086/**。手机与电脑连接同一局域网后，可访问终端显示的 Network 地址。不同域名、设备或浏览器的本地数据各自独立。
+
+```bash
+npm test             # 领域、仓库、关键交互测试
+npm run typecheck    # TypeScript 检查
+npm run build:h5     # 类型检查 + 生产构建，输出 dist/
+npm run preview:h5   # 预览构建结果；先停止占用同一端口的开发服务
+npm run format:check # 格式检查
+```
+
+项目 `.npmrc` 已设置 `registry=https://registry.npmmirror.com` 和 `cache=./.npm-cache`。`node_modules`、`.npm-cache`、`dist` 均在 `.gitignore` 中。
+
+## 当前进度
+
+### 已完成
+
+- [x] 简体中文页面；底部「记录 / 统计 / 我的」三个 Tab。
+- [x] 系统字体、留白、大数字、等宽数字、单一暖橙点缀、细线 SVG 图表。
+- [x] 跟随系统 / 浅色 / 深色，手动偏好持久化；尊重减少动态效果设置。
+- [x] 六种训练：抱石、先锋、顶绳、指力板、力量、有氧。
+- [x] 日期、场馆、整次训练 RPE（主观强度 1–10）、时长和备注。
+- [x] 多线路录入；V / YDS / 法式难度宫格、尝试次数、线路备注。
+- [x] Flash（一次完攀）/ Send（完攀）/ Attempt（尝试）/ Project（攻线）。
+- [x] 指力板、力量、有氧可只记录时长与备注；可选动作、组数、每组次数、负重及每组时长。
+- [x] 本周训练次数、本周最高完攀（抱石 / 绳索分开）、本周完攀数、累计训练次数。
+- [x] 近 8 周训练量、难度趋势（抱石 / 先锋 / 顶绳分开）、完攀率、难度金字塔。
+- [x] 历史倒序、类型筛选、分批查看更多、编辑、删除确认。
+- [x] 未保存退出确认；切换不兼容难度体系时确认；保存失败保留表单。
+- [x] JSON 导出下载入口；导入文件校验、预览、合并 / 覆盖；覆盖需明确确认。
+- [x] 最近 8 周示例，目标水平为 V3–V4 / 先锋 5.10a / 顶绳 5.11a。
+- [x] 示例清晰标记；示例参与统计时提示；一键清除只删除示例。
+- [x] 24 项自动测试；H5 生产构建。
+
+### 未完成 / 本次范围之外
+
+- [ ] 微信小程序实际构建与真机验证。
+- [ ] `WxStorageAdapter`、云开发、微信登录及多设备同步（接口与迁移说明已预留）。
+- [ ] 指力板计时器、训练计划、日历视图。
+- [ ] Safari / 微信内置浏览器真机兼容性回归。
+- [ ] 浏览器实际下载文件落盘后的人工回验；自动测试已核对下载入口、文件名、JSON Blob 和再次导入解析。
+- [ ] 当前会话的最终 Git 提交：环境仍禁止写入 `.git`，具体情况见下文。
+
+## 目录结构
+
+```text
+climb-log/
+├── docs/
+│   ├── design-notes.md          # 用户提供的设计依据，原样保留
+│   ├── data-model.md            # 三表字段、校验与统计口径
+│   └── validation.md            # 本次验证记录及边界
+├── src/
+│   ├── domain/                 # 纯 TypeScript，无浏览器 / Taro 依赖
+│   │   ├── types.ts            # sessions / climbs / training 类型
+│   │   ├── grades.ts           # 难度选项、数值排序、近似换算
+│   │   ├── dates.ts            # 本地日历日期与周一周界
+│   │   ├── stats.ts            # 概览、金字塔、训练量、难度趋势
+│   │   ├── validation.ts       # JSON 结构和关系校验
+│   │   └── examples.ts         # 可复现、带来源标记的示例
+│   ├── storage/
+│   │   ├── StorageAdapter.ts   # 异步接口；微信 / 云适配器注释桩
+│   │   └── LocalStorageAdapter.ts
+│   ├── repo/
+│   │   └── TrainingRepository.ts # CRUD、级联删除、合并覆盖、导出
+│   ├── ui/
+│   │   ├── pages/              # Journal / Progress / Profile
+│   │   ├── components/         # 训练表单、弹窗、SVG 图表、图标
+│   │   ├── ClimbApp.tsx        # 注入仓库、导航、主题、操作反馈
+│   │   └── styles.css          # 响应式与主题变量
+│   └── main.tsx
+├── tests/fixtures/             # 有效 / 无效导入验证文件
+├── index.html
+├── vite.config.ts
+├── vitest.config.ts
+└── package-lock.json
+```
+
+仓库只依赖 `StorageAdapter` 接口；平台存储 API 集中在适配器。文件选择、下载、主题监听与弹窗等 H5 行为位于 UI 层。
+
+## 数据与统计约定
+
+- 以本地日历的周一至周日为一周，避免 UTC 转换导致日期偏移。
+- **只有 Flash 和 Send 算完攀**。Flash 必须恰好一次尝试；UI 增加尝试次数时自动改为 Send。
+- 完攀率按「完攀线路条数 / 已记录线路条数」计算，不把尝试次数当作线路数。
+- 训练量曲线是每周训练次数，可切换查看该周分钟数和完攀条数；时长来自整次训练，动作时长不重复累加。
+- 抱石与绳索不跨体系比较。首页绳索最高值合并先锋、顶绳；难度趋势提供各自独立的切换。
+- 法式难度只做**近似** YDS 对照，原始难度仍保留。不同对照表、岩馆和路线风格会有差异；不把换算结果视为精准等价。背景参考：[UIAA《Scales of Difficulty in Climbing》](https://theuiaa.org/documents/mountaineering/THESCALESOFDIFFICULTYINCLIMBING_p1b.pdf)。
+- 金字塔统计所有已记录完攀，各级实际数量可能不呈规则三角形；未完攀周的难度趋势留空。
+- 合并导入按训练 ID 替换整次训练和其子记录；同一文件重复导入不会增加重复训练。跨训练的子表 ID 冲突会整体拒绝，原数据保留。
+- 文件不超过 5 MB，每张表不超过 50,000 条。导入会校验真实日期、枚举、范围、重复 ID、外键和难度体系。
+- 本地数据读取或写入失败会明确报错，不自动清空数据库。多标签页可刷新显示变化，但不提供跨标签页同时编辑的冲突合并。
+
+## 为什么本次使用 Vite
+
+22:14 开始优先尝试 Taro。已安装 Taro **4.3.3** 及其 H5 / React / Vite 依赖，但构建会尝试创建项目之外的目录：
+
+```text
+EPERM: operation not permitted, mkdir '/Users/carp-yh/.taro4.0'
+```
+
+尝试官方 CLI 的 `--disable-global-config` 选项后仍有同样错误。为遵守只在项目内写文件的限制，未修改用户 HOME、未改框架内部源码，也未继续消耗安装时间；约 22:24 切换为 Vite。Taro 运行依赖已从最终项目中移除，数据层和仓库结构不受影响。
+
+## 下一步如何转微信小程序
+
+1. **建立 Taro 4 React TypeScript 项目配置。** 使用同一版本的 `@tarojs/cli`、`@tarojs/taro`、`@tarojs/components`、React 框架插件、H5 和 weapp 平台插件；补 `config/index.ts`、`src/app.tsx`、`app.config.ts` 与页面入口。需在允许 Taro 正常创建其配置目录的环境操作。[Taro 编译配置文档](https://docs.taro.zone/docs/config)。
+2. **原样复用 `src/domain` 与 `src/repo`。** 保留数据版本、ID、统计口径及已有测试，避免在页面中重新实现业务规则。
+3. **实现并注入 `WxStorageAdapter`。** 用 `Taro.getStorage / setStorage / removeStorage` 实现同一异步接口；只在确认为键不存在时返回 `null`，其他错误应抛出。H5 继续注入 `LocalStorageAdapter`。存储体积接近小程序限额时再按会话拆分或迁往云数据库。
+4. **逐步转换 UI 基础组件。** 当前 UI 使用语义化 HTML；将 `div / section / button / input / textarea / dialog` 替换成 Taro 的 `View / Text / Button / Input / Textarea` 与自定义弹层；调整 `onChange` 的值读取、表单校验和焦点管理。为大点击区、浅深色变量、减少动画偏好提供小程序端实现。
+5. **替换 H5 平台行为。** 文件导入改为小程序文件选择与文件系统读取；导出通过文件系统写 JSON 后提供分享 / 保存入口；主题监听改用 Taro / 微信主题 API；原生 `<dialog>` 改成遮罩弹层。文件读写需要真实设备验收，不能只替换 API 名称。
+6. **迁移 SVG 图表。** 用 Canvas 或平台可用的 SVG / 图片方案绘制相同纯数据，不把统计计算搬入 Canvas 代码。
+7. **配置微信工程并验证。** 增加实际 AppID 与 `project.config.json`，设置三个 Tab 的页面入口或自定义 TabBar。增加 `dev:weapp` / `build:weapp` 命令，在微信开发者工具、iOS 和 Android 真机检查表单、存储、导入导出与主题。
+8. **后续接云开发。** 在登录、用户隔离、权限规则和版本冲突策略明确后实现云适配器。现有本地备份作为迁移输入，不自动把示例当成用户真实训练上传。
+
+本项目尚不能直接执行微信小程序构建，迁移需要完成上述 UI 与平台适配。
+
+## Git 状态与交付限制
+
+按要求，第一条命令就是 `git init`，但当时创建 `.git` 被拒绝；各模块完成后执行提交命令也受到环境限制。22:47 出现了外部创建的检查点提交：
+
+```text
+0007658 checkpoint 22:47: Vite+React+TS 进行中（小G 在沙盒外代为提交）
+```
+
+当前会话后续执行 `git add -A && git commit ...` 时，仍得到 `.git/index.lock: Operation not permitted`。这属于执行环境限制，不能把尚未提交的文件描述为已提交。
+
+如最终检查点尚未由外部环境代为提交，可在有写权限的终端执行：
+
+```bash
+cd ~/codex-work/climb-log
+git add -A
+git commit -m "feat: complete climb log H5 MVP and validation"
+```
+
+最新验证详情见 [docs/validation.md](docs/validation.md)。

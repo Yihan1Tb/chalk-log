@@ -19,9 +19,15 @@ export function startOfWeek(date: Date): Date {
   start.setHours(0, 0, 0, 0)
   return start
 }
-export function weekKey(date: Date): string { return dateKey(startOfWeek(date)) }
+export function weekKey(date: Date): string {
+  return dateKey(startOfWeek(date))
+}
 export function formatDate(value: string): string {
-  return parseDate(value).toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' })
+  return parseDate(value).toLocaleDateString('zh-CN', {
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+  })
 }
 export function shortDate(value: string): string {
   const date = parseDate(value)
