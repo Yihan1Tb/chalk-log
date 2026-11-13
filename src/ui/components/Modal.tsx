@@ -24,9 +24,12 @@ export function Modal({
     if (openModalCount === 0) previousBodyOverflow = document.body.style.overflow
     openModalCount += 1
     document.body.style.overflow = 'hidden'
-    dialog.showModal()
+    // Older iOS WebViews (before Safari 15.4) lack showModal; fall back to a plain open dialog.
+    if (typeof dialog.showModal === 'function') dialog.showModal()
+    else dialog.setAttribute('open', '')
     return () => {
-      dialog.close()
+      if (typeof dialog.close === 'function') dialog.close()
+      else dialog.removeAttribute('open')
       openModalCount -= 1
       if (openModalCount === 0) document.body.style.overflow = previousBodyOverflow
       if (previous?.isConnected) previous.focus()

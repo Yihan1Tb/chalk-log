@@ -120,8 +120,11 @@ a {
   color: var(--accent);
 }
 .app-shell {
+  --shell-x: 56px;
   max-width: 1200px;
-  padding: 0 56px;
+  /* viewport-fit=cover: keep content clear of notches in landscape and standalone mode. */
+  padding: env(safe-area-inset-top, 0px) calc(var(--shell-x) + env(safe-area-inset-right, 0px)) 0
+    calc(var(--shell-x) + env(safe-area-inset-left, 0px));
   margin: 0 auto;
 }
 .app-header {
@@ -1171,6 +1174,7 @@ a {
   padding: 0;
   border-radius: 21px;
   width: min(640px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
   max-height: calc(100dvh - 48px);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -1718,7 +1722,7 @@ input[type='checkbox'] {
 }
 @media (max-width: 1020px) {
   .app-shell {
-    padding: 0 35px;
+    --shell-x: 35px;
   }
   .metric {
     padding: 0 23px;
@@ -1770,7 +1774,7 @@ input[type='checkbox'] {
 }
 @media (max-width: 760px) {
   .app-shell {
-    padding: 0 24px;
+    --shell-x: 24px;
   }
   .app-header {
     height: 79px;
@@ -1900,7 +1904,7 @@ input[type='checkbox'] {
 }
 @media (max-width: 540px) {
   .app-shell {
-    padding: 0 22px;
+    --shell-x: 22px;
   }
   .app-header {
     height: 74px;
@@ -2103,7 +2107,7 @@ input[type='checkbox'] {
   .app-footer {
     font-size: 9px;
     gap: 12px;
-    padding-bottom: 112px;
+    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
   }
   .bottom-nav {
     bottom: 0;
@@ -2113,7 +2117,8 @@ input[type='checkbox'] {
     border-radius: 0;
     border: 0;
     border-top: 1px solid var(--line);
-    padding: 5px 24px calc(8px + env(safe-area-inset-bottom, 0px));
+    padding: 5px calc(24px + env(safe-area-inset-right, 0px))
+      calc(8px + env(safe-area-inset-bottom, 0px)) calc(24px + env(safe-area-inset-left, 0px));
     justify-content: space-around;
   }
   .bottom-nav button {
@@ -2289,7 +2294,8 @@ input[type='checkbox'] {
   }
   .modal {
     width: 100%;
-    max-height: calc(100dvh - 14px);
+    max-height: calc(100vh - 14px - env(safe-area-inset-top, 0px));
+    max-height: calc(100dvh - 14px - env(safe-area-inset-top, 0px));
     margin: auto 0 0;
     border-radius: 20px 20px 0 0;
     border-bottom: 0;
@@ -2407,7 +2413,7 @@ input[type='checkbox'] {
 }
 @media (max-width: 370px) {
   .app-shell {
-    padding: 0 16px;
+    --shell-x: 16px;
   }
   .metric {
     padding: 0 10px;
@@ -2627,4 +2633,86 @@ input[type='checkbox'] {
 }
 .calendar-day-heading {
   padding: 22px 0 8px;
+}
+
+/* iPhone Safari / 微信内置浏览器兼容 */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+a,
+button,
+label,
+select,
+summary,
+[role='button'] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.bottom-nav {
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  -webkit-user-select: none;
+  user-select: none;
+}
+.toast {
+  top: calc(24px + env(safe-area-inset-top, 0px));
+}
+.timer-digits {
+  -webkit-user-select: none;
+  user-select: none;
+}
+/* iOS Safari 日期输入：去掉系统样式后保持左对齐、高度稳定、不会显示为空白。 */
+input[type='date'] {
+  display: block;
+  text-align: left;
+  line-height: 1.5;
+}
+input[type='date']::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.5em;
+}
+input[type='date']::-webkit-calendar-picker-indicator {
+  opacity: 0.6;
+}
+.storage-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 20px;
+  margin-top: 20px;
+  padding: 16px 18px;
+  border: 1px solid var(--accent);
+  border-radius: 14px;
+  background: var(--accent-soft);
+}
+.storage-notice strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+.storage-notice p {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--secondary);
+}
+@media (max-width: 540px) {
+  .bottom-nav {
+    bottom: 0;
+  }
+  .toast {
+    top: calc(15px + env(safe-area-inset-top, 0px));
+  }
+}
+/* 触屏设备上输入框字号不小于 16px，避免 iOS 聚焦时自动放大页面。 */
+@media (hover: none), (pointer: coarse) {
+  input:not([type='range'], [type='radio'], [type='checkbox'], [type='file']),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }

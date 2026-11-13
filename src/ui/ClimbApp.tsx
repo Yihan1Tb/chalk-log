@@ -231,16 +231,30 @@ export function ClimbApp() {
         {(storageBlocked || temporary) && (
           <section className="storage-notice" aria-label="存储状态">
             <div role="status">
-              <strong>{temporary ? '临时模式：记录尚未持久保存' : '本地存储不可用或空间不足'}</strong>
-              <p>{temporary
-                ? '刷新或关闭页面会丢失临时记录，请先导出 JSON 备份。原本地数据不会被覆盖。'
-                : '浏览器可能限制了存储。可检查权限后重试，或使用临时模式继续记录。临时记录只在当前页面有效。'}</p>
-              {storageBlocked && !db && <p>原有记录暂时无法读取；进入临时模式会从空列表开始，不会清除原数据。</p>}
+              <strong>
+                {temporary ? '临时模式：记录尚未持久保存' : '本地存储不可用或空间不足'}
+              </strong>
+              <p>
+                {temporary
+                  ? '刷新或关闭页面会丢失临时记录，请先导出 JSON 备份。原本地数据不会被覆盖。'
+                  : '浏览器可能限制了存储。可检查权限后重试，或使用临时模式继续记录。临时记录只在当前页面有效。'}
+              </p>
+              {storageBlocked && !db && (
+                <p>原有记录暂时无法读取；进入临时模式会从空列表开始，不会清除原数据。</p>
+              )}
             </div>
-            {temporary ? <button className="button secondary" disabled={!db} onClick={exportData}>导出临时记录</button> : (
+            {temporary ? (
+              <button className="button secondary" disabled={!db} onClick={exportData}>
+                导出临时记录
+              </button>
+            ) : (
               <div className="journal-actions">
-                <button className="button secondary" onClick={reload}>重试本地存储</button>
-                <button className="button secondary" onClick={useTemporaryStorage}>使用临时模式</button>
+                <button className="button secondary" onClick={reload}>
+                  重试本地存储
+                </button>
+                <button className="button secondary" onClick={useTemporaryStorage}>
+                  使用临时模式
+                </button>
               </div>
             )}
           </section>
@@ -288,7 +302,13 @@ export function ClimbApp() {
       <footer className="app-footer">
         <span>岩迹</span>
         <span>每一步，都有意义。</span>
-        <span>{temporary ? '临时记录，请及时导出' : storageBlocked ? '存储受限，请检查备份' : '记录保存在此设备'}</span>
+        <span>
+          {temporary
+            ? '临时记录，请及时导出'
+            : storageBlocked
+              ? '存储受限，请检查备份'
+              : '记录保存在此设备'}
+        </span>
       </footer>
       <nav className="bottom-nav" aria-label="主要导航">
         {(
