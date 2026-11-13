@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "sessions": [{ "id": "invalid-date", "date": "2026-02-30" }],
+  "climbs": [],
+  "training": []
+}
