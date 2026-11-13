@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { emptyDatabase, type SessionDetail } from '../domain/types'
 import { parseImport } from '../domain/validation'
 import validImport from '../../tests/fixtures/import-valid.json'
@@ -23,8 +23,49 @@ beforeEach(() => {
 })
 afterEach(() => {
   cleanup()
+  vi.useRealTimers()
   localStorage.clear()
   vi.restoreAllMocks()
+})
+
+describe('指力板计时器', () => {
+  it('开始、暂停、继续、重置，并将完整计时预填为可保存的指力板训练', async () => {
+    render(<ClimbApp />)
+    fireEvent.click(await screen.findByRole('button', { name: '指力板计时器' }))
+    vi.useFakeTimers()
+    for (const [label, value] of [
+      ['悬挂秒数', '2'],
+      ['休息秒数', '1'],
+      ['每组次数', '2'],
+      ['组数', '2'],
+      ['组间休息秒数', '3'],
+    ])
+      fireEvent.change(screen.getByLabelText(label), { target: { value } })
+    expect((screen.getByLabelText('阶段提示音') as HTMLInputElement).checked).toBe(false)
+    fireEvent.click(screen.getByRole('button', { name: '开始' }))
+    act(() => vi.advanceTimersByTime(5500))
+    expect(screen.getByRole('timer').getAttribute('aria-label')).toBe('剩余 2 秒')
+    fireEvent.click(screen.getByRole('button', { name: '暂停' }))
+    act(() => vi.advanceTimersByTime(100000))
+    expect(screen.getByText('悬挂 · 已暂停')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: '继续' }))
+    fireEvent.click(screen.getByRole('button', { name: '重置' }))
+    expect(screen.getByRole('timer').getAttribute('aria-label')).toBe('剩余 5 秒')
+    fireEvent.click(screen.getByRole('button', { name: '开始' }))
+    act(() => vi.advanceTimersByTime(18000))
+    fireEvent.click(screen.getByRole('button', { name: '生成训练记录' }))
+    expect(screen.getByRole('dialog', { name: '记录一次训练' })).toBeTruthy()
+    expect((screen.getByLabelText('训练时长（分钟）') as HTMLInputElement).value).toBe('1')
+    expect((screen.getByLabelText('每组秒数') as HTMLInputElement).value).toBe('4')
+    vi.useRealTimers()
+    fireEvent.click(screen.getByRole('button', { name: '保存训练' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(document.body.style.overflow).not.toBe('hidden')
+    const saved = parseImport(localStorage.getItem(DATABASE_KEY)!)
+    expect(saved.sessions).toHaveLength(1)
+    expect(saved.sessions[0].type).toBe('hangboard')
+    expect(saved.training[0]).toMatchObject({ sets: 2, reps: 2, durationSeconds: 4 })
+  })
 })
 const profileProps = () => ({
   db: emptyDatabase(),

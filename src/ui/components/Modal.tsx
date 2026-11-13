@@ -1,6 +1,9 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { Icon } from './Icon'
 
+let openModalCount = 0
+let previousBodyOverflow = ''
+
 export function Modal({
   title,
   subtitle,
@@ -18,13 +21,15 @@ export function Modal({
   useEffect(() => {
     const dialog = ref.current!
     const previous = document.activeElement as HTMLElement | null
-    const overflow = document.body.style.overflow
+    if (openModalCount === 0) previousBodyOverflow = document.body.style.overflow
+    openModalCount += 1
     document.body.style.overflow = 'hidden'
     dialog.showModal()
     return () => {
       dialog.close()
-      document.body.style.overflow = overflow
-      previous?.focus()
+      openModalCount -= 1
+      if (openModalCount === 0) document.body.style.overflow = previousBodyOverflow
+      if (previous?.isConnected) previous.focus()
     }
   }, [])
   return (

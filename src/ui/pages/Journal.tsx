@@ -13,10 +13,12 @@ import {
 } from '../../domain/types'
 import { VolumeChart } from '../components/Charts'
 import { Icon } from '../components/Icon'
+import { TrainingCalendar } from '../components/TrainingCalendar'
 
 export function Journal({
   db,
   onNew,
+  onTimer,
   onEdit,
   onDelete,
   onExamples,
@@ -25,6 +27,7 @@ export function Journal({
 }: {
   db: Database
   onNew: () => void
+  onTimer: () => void
   onEdit: (session: Session) => void
   onDelete: (session: Session) => void
   onExamples: () => void
@@ -34,8 +37,11 @@ export function Journal({
   const stats = overview(db)
   const [filter, setFilter] = useState<SessionType | 'all'>('all')
   const [limit, setLimit] = useState(8)
-  const sessions = db.sessions
-    .filter((s) => filter === 'all' || s.type === filter)
+  const [view, setView] = useState<'list' | 'calendar'>('list')
+  const [selectedDate, setSelectedDate] = useState(() => dateKey(new Date()))
+  const filteredSessions = db.sessions.filter((s) => filter === 'all' || s.type === filter)
+  const sessions = filteredSessions
+    .filter((s) => view === 'list' || s.date === selectedDate)
     .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt))
   const monday = startOfWeek(new Date())
   const weekRange = `${shortDate(dateKey(monday))} — ${shortDate(dateKey(addDays(monday, 6)))}`
@@ -54,10 +60,15 @@ export function Journal({
           </h1>
           <p className="intro-description">记录尝试，看见积累。下一次，比上一次更近一点。</p>
         </div>
-        <button className="button primary new-session-button" onClick={onNew}>
-          <Icon name="plus" size={20} />
-          记录训练
-        </button>
+        <div className="journal-actions">
+          <button className="button primary new-session-button" onClick={onNew}>
+            <Icon name="plus" size={20} />
+            记录训练
+          </button>
+          <button className="button secondary" onClick={onTimer}>
+            指力板计时器
+          </button>
+        </div>
       </section>
       <div className="overview-heading">
         <span>本周概览</span>
@@ -155,7 +166,26 @@ export function Journal({
                 训练记录 <span className="count-label">{db.sessions.length}</span>
               </h2>
             </div>
-            <Icon name="calendar" size={21} />
+            <div className="segmented compact" aria-label="记录视图">
+              <button
+                aria-pressed={view === 'list'}
+                onClick={() => {
+                  setView('list')
+                  setLimit(8)
+                }}
+              >
+                列表
+              </button>
+              <button
+                aria-pressed={view === 'calendar'}
+                onClick={() => {
+                  setView('calendar')
+                  setLimit(8)
+                }}
+              >
+                日历
+              </button>
+            </div>
           </div>
           <div className="filter-tabs" aria-label="筛选训练类型">
             {(['all', ...SESSION_TYPES] as const).map((type) => (
@@ -171,6 +201,21 @@ export function Journal({
               </button>
             ))}
           </div>
+          {view === 'calendar' && (
+            <>
+              <TrainingCalendar
+                sessions={filteredSessions}
+                selectedDate={selectedDate}
+                onSelect={(date) => {
+                  setSelectedDate(date)
+                  setLimit(8)
+                }}
+              />
+              <h3 className="calendar-day-heading" aria-live="polite">
+                {formatDate(selectedDate)} · {sessions.length} 次训练
+              </h3>
+            </>
+          )}
           <div className="session-list">
             {sessions.length ? (
               sessions.slice(0, limit).map((session) => {
@@ -249,15 +294,21 @@ export function Journal({
                   <Icon name="mountain" size={32} />
                 </div>
                 <h3>
-                  {db.sessions.length ? '这个分类，等待第一条记录。' : '岩壁上的努力，值得被记住。'}
+                  {view === 'calendar'
+                    ? '这一天还没有符合筛选的训练。'
+                    : db.sessions.length
+                      ? '这个分类，等待第一条记录。'
+                      : '岩壁上的努力，值得被记住。'}
                 </h3>
                 <p>
-                  {db.sessions.length
-                    ? '换个分类看看，或记录一次新训练。'
-                    : '一次完攀，几次尝试，都是前进的一部分。'}
+                  {view === 'calendar'
+                    ? '点选其他日期，或切换训练类型查看。'
+                    : db.sessions.length
+                      ? '换个分类看看，或记录一次新训练。'
+                      : '一次完攀，几次尝试，都是前进的一部分。'}
                 </p>
                 <button className="text-button" onClick={onNew}>
-                  记下今天的训练
+                  {view === 'calendar' ? '记录一次训练' : '记下今天的训练'}
                   <Icon name="arrow" size={17} />
                 </button>
               </div>
@@ -269,7 +320,10 @@ export function Journal({
             </button>
           )}
           {sessions.length > 0 && (
-            <p className="history-hint">点击记录可查看与编辑 · 按训练日期倒序排列</p>
+            <p className="history-hint">
+              点击记录可查看与编辑 ·{' '}
+              {view === 'calendar' ? '显示所选日期的训练' : '按训练日期倒序排列'}
+            </p>
           )}
         </section>
         <aside className="journal-aside">

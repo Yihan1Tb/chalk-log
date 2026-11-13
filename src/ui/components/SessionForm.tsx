@@ -48,10 +48,12 @@ function newTraining(sessionId: string, type: SessionType): Training {
 }
 export function SessionForm({
   initial,
+  draft = false,
   onClose,
   onSave,
 }: {
   initial?: SessionDetail
+  draft?: boolean
   onClose: () => void
   onSave: (detail: SessionDetail) => Promise<void>
 }) {
@@ -75,7 +77,7 @@ export function SessionForm({
   )
   const [training, setTraining] = useState<Training[]>(() => initial?.training ?? [])
   const [active, setActive] = useState(0)
-  const [dirty, setDirty] = useState(false)
+  const [dirty, setDirty] = useState(draft)
   const [routeTouched, setRouteTouched] = useState(Boolean(initial))
   const [discard, setDiscard] = useState(false)
   const [pendingType, setPendingType] = useState<SessionType | null>(null)
@@ -146,7 +148,7 @@ export function SessionForm({
   }
   return (
     <Modal
-      title={initial ? '编辑训练' : '记录一次训练'}
+      title={initial && !draft ? '编辑训练' : '记录一次训练'}
       subtitle="每一次尝试，都值得记录"
       onClose={close}
       className="session-modal"

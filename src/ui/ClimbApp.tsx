@@ -13,6 +13,7 @@ import { LocalStorageAdapter } from '../storage/LocalStorageAdapter'
 import { Icon } from './components/Icon'
 import { ConfirmDialog, type ConfirmOptions } from './components/Modal'
 import { SessionForm } from './components/SessionForm'
+import { HangboardTimer } from './components/HangboardTimer'
 import { Journal } from './pages/Journal'
 import { Progress } from './pages/Progress'
 import { Profile, type Theme } from './pages/Profile'
@@ -34,7 +35,8 @@ export function ClimbApp() {
   const [tab, setTab] = useState<Tab>('journal')
   const [theme, setTheme] = useState<Theme>(initialTheme)
   const [resolvedTheme, setResolvedTheme] = useState('light')
-  const [editor, setEditor] = useState<{ detail?: SessionDetail } | null>(null)
+  const [editor, setEditor] = useState<{ detail?: SessionDetail; draft?: boolean } | null>(null)
+  const [timerOpen, setTimerOpen] = useState(false)
   const [confirm, setConfirm] = useState<ConfirmOptions | null>(null)
   const [confirmError, setConfirmError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -102,7 +104,8 @@ export function ClimbApp() {
   const save = async (detail: SessionDetail) => {
     setDb(await repository.save(detail))
     setEditor(null)
-    notify(editor?.detail ? '训练记录已更新' : '今天的努力，记下了。')
+    if (editor?.draft) setTimerOpen(false)
+    notify(editor?.detail && !editor.draft ? '训练记录已更新' : '今天的努力，记下了。')
   }
   const remove = (session: Session) =>
     setConfirm({
@@ -218,6 +221,7 @@ export function ClimbApp() {
           <Journal
             db={db}
             onNew={() => setEditor({})}
+            onTimer={() => setTimerOpen(true)}
             onEdit={edit}
             onDelete={remove}
             onExamples={loadExamples}
@@ -263,8 +267,19 @@ export function ClimbApp() {
           </button>
         ))}
       </nav>
+      {timerOpen && (
+        <HangboardTimer
+          onClose={() => setTimerOpen(false)}
+          onRecord={(detail) => setEditor({ detail, draft: true })}
+        />
+      )}
       {editor && (
-        <SessionForm initial={editor.detail} onClose={() => setEditor(null)} onSave={save} />
+        <SessionForm
+          initial={editor.detail}
+          draft={editor.draft}
+          onClose={() => setEditor(null)}
+          onSave={save}
+        />
       )}
       {confirm && (
         <ConfirmDialog
