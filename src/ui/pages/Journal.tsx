@@ -65,7 +65,8 @@ export function Journal({
             <Icon name="plus" size={20} />
             记录训练
           </button>
-          <button className="button secondary" onClick={onTimer}>
+          <button className="button secondary timer-entry" onClick={onTimer}>
+            <Icon name="clock" size={19} />
             指力板计时器
           </button>
         </div>

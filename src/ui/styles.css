@@ -2457,7 +2457,23 @@ input[type='checkbox'] {
 .journal-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
+}
+.page-intro .journal-actions {
+  margin-bottom: 4px;
+}
+.page-intro .journal-actions .button {
+  margin: 0;
+}
+@media (max-width: 540px) {
+  .page-intro .journal-actions {
+    margin-top: 23px;
+  }
+  .page-intro .journal-actions .button {
+    min-height: 46px;
+    padding: 12px 19px;
+  }
 }
 .timer-modal {
   max-width: 560px;
