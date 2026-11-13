@@ -64,7 +64,10 @@ function unique(rows: { id: string }[], label: string) {
 }
 export function validateDatabase(input: unknown): Database {
   const data = object(input, '数据')
-  assert(data.schemaVersion === 1, '不支持的数据版本，请导入岩迹导出的版本 1 JSON')
+  assert(
+    data.schemaVersion === 1,
+    '不支持的数据版本，请导入 Chalk Log（原名岩迹）导出的版本 1 JSON',
+  )
   for (const key of ['sessions', 'climbs', 'training']) {
     assert(
       Array.isArray(data[key]) && data[key].length <= 50000,

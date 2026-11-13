@@ -2,7 +2,7 @@
   "name": "climb-log",
   "version": "1.0.0",
   "private": true,
-  "description": "岩迹 · 攀岩训练记录",
+  "description": "Chalk Log · 攀岩训练记录",
   "scripts": {
     "dev:h5": "vite",
     "build:h5": "tsc --noEmit && vite build",

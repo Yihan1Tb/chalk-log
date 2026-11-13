@@ -32,6 +32,7 @@ describe('iPhone Safari / 微信内置浏览器兼容', () => {
   it('视口覆盖刘海区域，并在样式中预留安全区、动态视口高度与 16px 输入字号', () => {
     expect(html).toMatch(/viewport-fit=cover/)
     expect(html).toMatch(/lang="zh-CN"/)
+    expect(html).toContain('<title>Chalk Log · 攀岩训练记录</title>')
     for (const side of ['top', 'right', 'bottom', 'left'])
       expect(css).toContain(`env(safe-area-inset-${side}, 0px)`)
     expect(css).toMatch(/max-height: calc\(100vh[^;]*;\s*max-height: calc\(100dvh/)

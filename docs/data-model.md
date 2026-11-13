@@ -1,4 +1,4 @@
-# 岩迹数据模型（schemaVersion 1）
+# Chalk Log 数据模型（schemaVersion 1）
 
 JSON 根对象包含 `schemaVersion: 1` 与 `sessions`、`climbs`、`training` 三个数组。导出还附带 `exportedAt` 和应用名称；导入只取白名单字段，不执行任何文件内容。
 

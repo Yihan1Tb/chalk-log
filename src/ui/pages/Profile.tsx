@@ -220,7 +220,7 @@ export function Profile({
       </div>
       <div className="about-app">
         <Icon name="mountain" size={24} />
-        <strong>岩迹</strong>
+        <strong>Chalk Log</strong>
         <span>把每一次向上，留在这里。</span>
         <small>版本 1.0 · 为热爱攀爬的人而做</small>
       </div>

@@ -227,7 +227,7 @@ describe('导出下载入口', () => {
     fireEvent.click(screen.getByRole('button', { name: '我的' }))
     fireEvent.click(screen.getByRole('button', { name: '导出' }))
     await waitFor(() => expect(exported).toBeTruthy())
-    expect(filename).toMatch(/^岩迹-训练备份-\d{4}-\d{2}-\d{2}\.json$/)
+    expect(filename).toMatch(/^Chalk-Log-训练备份-\d{4}-\d{2}-\d{2}\.json$/)
     const json = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader()
       reader.onload = () => resolve(String(reader.result))
@@ -235,5 +235,18 @@ describe('导出下载入口', () => {
       reader.readAsText(exported!)
     })
     expect(parseImport(json)).toEqual(validImport)
+    expect(JSON.parse(json).app).toBe('Chalk Log')
+  })
+})
+
+describe('改名为 Chalk Log', () => {
+  it('页眉显示新名字，旧名「岩迹」的数据和备份照常读取', async () => {
+    // 存储键名未包含旧名，无需迁移：直接写入旧键，应能读出。
+    localStorage.setItem(DATABASE_KEY, JSON.stringify({ ...validImport, app: '岩迹' }))
+    render(<ClimbApp />)
+    expect(await screen.findByRole('button', { name: 'Chalk Log 首页' })).toBeTruthy()
+    expect(screen.queryByText('岩迹')).toBeNull()
+    expect(screen.getByText(validImport.sessions[0].venue)).toBeTruthy()
+    expect(parseImport(JSON.stringify({ ...validImport, app: '岩迹' }))).toEqual(validImport)
   })
 })

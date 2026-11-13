@@ -169,7 +169,7 @@ export function ClimbApp() {
       const url = URL.createObjectURL(new Blob([json], { type: 'application/json;charset=utf-8' }))
       const link = document.createElement('a')
       link.href = url
-      link.download = `岩迹-训练备份-${dateKey(new Date())}.json`
+      link.download = `Chalk-Log-训练备份-${dateKey(new Date())}.json`
       document.body.appendChild(link)
       link.click()
       link.remove()
@@ -201,13 +201,13 @@ export function ClimbApp() {
         跳到主要内容
       </a>
       <header className="app-header">
-        <button className="brand" onClick={() => switchTab('journal')} aria-label="岩迹首页">
+        <button className="brand" onClick={() => switchTab('journal')} aria-label="Chalk Log 首页">
           <span className="brand-mark">
             <Icon name="mountain" size={23} />
           </span>
-          <strong>岩迹</strong>
+          <strong>Chalk Log</strong>
           <span className="brand-divider" />
-          <span className="brand-caption">攀岩训练记录</span>
+          <span className="brand-caption">镁粉日志 · 攀岩训练记录</span>
         </button>
         <div className="header-right">
           <span className="header-date">
@@ -300,7 +300,7 @@ export function ClimbApp() {
         )}
       </main>
       <footer className="app-footer">
-        <span>岩迹</span>
+        <span>Chalk Log</span>
         <span>每一步，都有意义。</span>
         <span>
           {temporary

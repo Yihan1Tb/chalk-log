@@ -82,7 +82,7 @@ export class TrainingRepository {
   }
   async exportJson(): Promise<string> {
     return JSON.stringify(
-      { ...(await this.read()), exportedAt: new Date().toISOString(), app: '岩迹' },
+      { ...(await this.read()), exportedAt: new Date().toISOString(), app: 'Chalk Log' },
       null,
       2,
     )
