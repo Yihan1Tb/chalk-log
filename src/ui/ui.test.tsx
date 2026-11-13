@@ -8,6 +8,7 @@ import { Profile } from './pages/Profile'
 import { SessionForm } from './components/SessionForm'
 import { ClimbApp } from './ClimbApp'
 import { DATABASE_KEY } from '../repo/TrainingRepository'
+import { dateKey } from '../domain/dates'
 
 beforeEach(() => {
   HTMLDialogElement.prototype.showModal = function () {
@@ -65,6 +66,46 @@ describe('指力板计时器', () => {
     expect(saved.sessions).toHaveLength(1)
     expect(saved.sessions[0].type).toBe('hangboard')
     expect(saved.training[0]).toMatchObject({ sets: 2, reps: 2, durationSeconds: 4 })
+  })
+})
+
+describe('训练日历', () => {
+  it('标记同一天的多条训练，切月、筛选、编辑保存后刷新当天列表', async () => {
+    const today = dateKey(new Date())
+    const db = parseImport(JSON.stringify(validImport))
+    const session = { ...db.sessions[0], date: today }
+    db.sessions = [
+      session,
+      {
+        ...session,
+        id: 'calendar-second',
+        type: 'hangboard',
+        venue: '日历测试',
+        durationMinutes: 5,
+      },
+    ]
+    localStorage.setItem(DATABASE_KEY, JSON.stringify(db))
+    render(<ClimbApp />)
+    fireEvent.click(await screen.findByRole('button', { name: '日历' }))
+    const day = screen.getByRole('button', { name: `${today}，2 次训练，今天` })
+    expect(day.getAttribute('aria-pressed')).toBe('true')
+    expect(day.querySelector('.intensity-2')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: '上个月' }))
+    expect(screen.queryByRole('button', { name: `编辑 ${today} 指力板训练` })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: '下个月' }))
+    fireEvent.click(screen.getByRole('button', { name: '今天' }))
+    fireEvent.click(screen.getByRole('button', { name: '指力板' }))
+    expect(screen.getByRole('button', { name: `${today}，1 次训练，今天` })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: `编辑 ${today} 指力板训练` }))
+    fireEvent.change(screen.getByLabelText('场馆 / 地点'), { target: { value: '日历编辑成功' } })
+    fireEvent.click(screen.getByRole('button', { name: '保存训练' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(screen.getByText('日历编辑成功')).toBeTruthy()
+    const otherDay = today.endsWith('-01') ? `${today.slice(0, 8)}02` : `${today.slice(0, 8)}01`
+    fireEvent.click(screen.getByRole('button', { name: `${otherDay}，0 次训练` }))
+    expect(screen.getByText('这一天还没有符合筛选的训练。')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: '列表' }))
+    expect(screen.getByText('日历编辑成功')).toBeTruthy()
   })
 })
 const profileProps = () => ({

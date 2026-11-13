@@ -10,6 +10,8 @@ import {
 } from '../domain/types'
 import { TrainingRepository, DATABASE_KEY } from '../repo/TrainingRepository'
 import { LocalStorageAdapter } from '../storage/LocalStorageAdapter'
+import { MemoryStorageAdapter } from '../storage/MemoryStorageAdapter'
+import type { StorageAdapter } from '../storage/StorageAdapter'
 import { Icon } from './components/Icon'
 import { ConfirmDialog, type ConfirmOptions } from './components/Modal'
 import { SessionForm } from './components/SessionForm'
@@ -29,7 +31,12 @@ function initialTheme(): Theme {
   }
 }
 export function ClimbApp() {
-  const repository = useMemo(() => new TrainingRepository(new LocalStorageAdapter()), [])
+  const [storageBlocked, setStorageBlocked] = useState(false)
+  const [temporary, setTemporary] = useState(false)
+  const [storage, setStorage] = useState<StorageAdapter>(
+    () => new LocalStorageAdapter(() => setStorageBlocked(true)),
+  )
+  const repository = useMemo(() => new TrainingRepository(storage), [storage])
   const [db, setDb] = useState<Database | null>(null)
   const [loadError, setLoadError] = useState('')
   const [tab, setTab] = useState<Tab>('journal')
@@ -42,7 +49,19 @@ export function ClimbApp() {
   const [busy, setBusy] = useState(false)
   const [toast, setToast] = useState<{ message: string; error: boolean } | null>(null)
   const notify = (message: string, error = false) => setToast({ message, error })
+  const useTemporaryStorage = async () => {
+    const memory = new MemoryStorageAdapter()
+    if (db) await memory.setItem(DATABASE_KEY, JSON.stringify(db))
+    setStorage(memory)
+    setTemporary(true)
+    setStorageBlocked(false)
+    setLoadError('')
+  }
   const reload = async () => {
+    if (storage instanceof LocalStorageAdapter) {
+      setStorageBlocked(false)
+      storage.checkWritable()
+    }
     try {
       setDb(await repository.read())
       setLoadError('')
@@ -53,6 +72,7 @@ export function ClimbApp() {
   useEffect(() => {
     void reload()
     const changed = (event: StorageEvent) => {
+      if (temporary) return
       if (event.key === DATABASE_KEY || event.key === null) void reload()
     }
     window.addEventListener('storage', changed)
@@ -69,13 +89,17 @@ export function ClimbApp() {
         ?.setAttribute('content', actual === 'dark' ? '#101012' : '#f5f5f7')
     }
     apply()
-    media.addEventListener('change', apply)
+    if (media.addEventListener) media.addEventListener('change', apply)
+    else media.addListener(apply)
     try {
       localStorage.setItem(THEME_KEY, theme)
     } catch {
       /* Theme remains usable for this page session. */
     }
-    return () => media.removeEventListener('change', apply)
+    return () => {
+      if (media.removeEventListener) media.removeEventListener('change', apply)
+      else media.removeListener(apply)
+    }
   }, [theme])
   useEffect(() => {
     if (!toast) return
@@ -204,6 +228,23 @@ export function ClimbApp() {
         </div>
       </header>
       <main id="main-content">
+        {(storageBlocked || temporary) && (
+          <section className="storage-notice" aria-label="存储状态">
+            <div role="status">
+              <strong>{temporary ? '临时模式：记录尚未持久保存' : '本地存储不可用或空间不足'}</strong>
+              <p>{temporary
+                ? '刷新或关闭页面会丢失临时记录，请先导出 JSON 备份。原本地数据不会被覆盖。'
+                : '浏览器可能限制了存储。可检查权限后重试，或使用临时模式继续记录。临时记录只在当前页面有效。'}</p>
+              {storageBlocked && !db && <p>原有记录暂时无法读取；进入临时模式会从空列表开始，不会清除原数据。</p>}
+            </div>
+            {temporary ? <button className="button secondary" disabled={!db} onClick={exportData}>导出临时记录</button> : (
+              <div className="journal-actions">
+                <button className="button secondary" onClick={reload}>重试本地存储</button>
+                <button className="button secondary" onClick={useTemporaryStorage}>使用临时模式</button>
+              </div>
+            )}
+          </section>
+        )}
         {loadError ? (
           <section className="load-state">
             <h1>记录暂时无法读取。</h1>
@@ -233,6 +274,7 @@ export function ClimbApp() {
         ) : (
           <Profile
             db={db}
+            temporary={temporary}
             theme={theme}
             onTheme={setTheme}
             onExport={exportData}
@@ -246,7 +288,7 @@ export function ClimbApp() {
       <footer className="app-footer">
         <span>岩迹</span>
         <span>每一步，都有意义。</span>
-        <span>记录保存在此设备</span>
+        <span>{temporary ? '临时记录，请及时导出' : storageBlocked ? '存储受限，请检查备份' : '记录保存在此设备'}</span>
       </footer>
       <nav className="bottom-nav" aria-label="主要导航">
         {(

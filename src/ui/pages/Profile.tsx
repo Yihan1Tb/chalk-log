@@ -7,6 +7,7 @@ import { Modal } from '../components/Modal'
 export type Theme = 'system' | 'light' | 'dark'
 export function Profile({
   db,
+  temporary = false,
   theme,
   onTheme,
   onExport,
@@ -16,6 +17,7 @@ export function Profile({
   busy,
 }: {
   db: Database
+  temporary?: boolean
   theme: Theme
   onTheme: (theme: Theme) => void
   onExport: () => void
@@ -183,7 +185,7 @@ export function Profile({
             </p>
           )}
           <p className="settings-note">
-            记录仅保存在此浏览器中。更换设备或清除浏览器数据前，请先导出备份。
+            {temporary ? '当前为临时模式，刷新或关闭页面会丢失记录。请先导出 JSON 备份。' : '记录仅保存在此浏览器中。更换设备或清除浏览器数据前，请先导出备份。'}
           </p>
         </section>
         <section className="settings-group sample-settings">
